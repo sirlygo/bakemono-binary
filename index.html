@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Bakemono Binary</title>
+
+<style>
+body{margin:0;overflow:hidden;background:black}
+#hud{position:absolute;top:10px;left:10px;color:white;font-family:sans-serif}
+</style>
+
+<script type="importmap">
+{
+ "imports": {
+   "three": "https://unpkg.com/three@0.161.0/build/three.module.js"
+ }
+}
+</script>
+
+</head>
+<body>
+
+<canvas id="game"></canvas>
+<div id="hud">WASD move | Q/E camera</div>
+
+<script type="module" src="./src/main.js"></script>
+
+</body>
+</html>
