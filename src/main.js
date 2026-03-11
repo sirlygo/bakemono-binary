@@ -210,6 +210,63 @@ player.position.set(0, 0.92, 3);
 player.castShadow = true;
 scene.add(player);
 
+const playerRadius = 0.35;
+const colliders = [];
+
+function addBoxCollider(minX, maxX, minZ, maxZ) {
+  colliders.push({ type: 'box', minX, maxX, minZ, maxZ });
+}
+
+function addCircleCollider(x, z, radius) {
+  colliders.push({ type: 'circle', x, z, radius });
+}
+
+function overlapsBox(x, z, radius, collider) {
+  const closestX = THREE.MathUtils.clamp(x, collider.minX, collider.maxX);
+  const closestZ = THREE.MathUtils.clamp(z, collider.minZ, collider.maxZ);
+  const dx = x - closestX;
+  const dz = z - closestZ;
+  return dx * dx + dz * dz < radius * radius;
+}
+
+function overlapsCircle(x, z, radius, collider) {
+  const dx = x - collider.x;
+  const dz = z - collider.z;
+  const allowedDistance = radius + collider.radius;
+  return dx * dx + dz * dz < allowedDistance * allowedDistance;
+}
+
+function hasCollision(x, z, radius) {
+  for (const collider of colliders) {
+    if (collider.type === 'box' && overlapsBox(x, z, radius, collider)) {
+      return true;
+    }
+    if (collider.type === 'circle' && overlapsCircle(x, z, radius, collider)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+[
+  { x: 0, z: 7, size: 1.15 },
+  { x: -7.5, z: -3.8, size: 1 },
+  { x: 7.5, z: -3.8, size: 1 }
+].forEach(({ x, z, size }) => {
+  const halfWidth = 1.45 * size;
+  const halfDepth = 1.35 * size;
+  addBoxCollider(x - halfWidth, x + halfWidth, z - halfDepth, z + halfDepth);
+});
+
+addBoxCollider(-3.1, 3.1, -10.55, -7.05);
+addCircleCollider(-14, 4.5, 3.15);
+
+[
+  [-12, -7, 1.2], [-9.5, -8.5, 1], [-7.5, -10, 1.15],
+  [11.5, -9.5, 1.2], [12.5, -6.5, 1], [10.2, -11.3, 1.15],
+  [-12, 7, 1], [12.4, 8.2, 1.1], [-8.2, 12, 1], [8.2, 12, 1]
+].forEach(([x, z, size]) => addCircleCollider(x, z, 0.45 * size));
+
 const keys = {};
 let camAngle = Math.PI * 0.2;
 
@@ -235,8 +292,16 @@ function update() {
     const length = Math.hypot(moveX, moveZ);
     moveX = (moveX / length) * baseSpeed;
     moveZ = (moveZ / length) * baseSpeed;
-    player.position.x += moveX;
-    player.position.z += moveZ;
+
+    const nextX = player.position.x + moveX;
+    if (!hasCollision(nextX, player.position.z, playerRadius)) {
+      player.position.x = nextX;
+    }
+
+    const nextZ = player.position.z + moveZ;
+    if (!hasCollision(player.position.x, nextZ, playerRadius)) {
+      player.position.z = nextZ;
+    }
   }
 
   player.position.x = THREE.MathUtils.clamp(player.position.x, -15.5, 15.5);
